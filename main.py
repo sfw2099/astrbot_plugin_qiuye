@@ -522,58 +522,74 @@ class QiuyePlugin(HubAPI, Star):
 
     # ==================== 用户中心（统一渲染） ====================
 
-    @filter.command("我的成就")
+    @filter.command("我的成就", alias={"成就", "我的诗词成就"})
     async def my_achievements(self, event: AstrMessageEvent):
-        uid = str(event.get_sender_id())
-        uname = event.get_sender_name() or f"用户{uid}"
-        achs = self.store.get_achievements(uid)
-        img_path = os.path.join(self.data_dir, f"my_achievements_{uid}.png")
-        render_achievements(uname, achs, self.get_registry(), img_path)
-        yield event.image_result(img_path)
+        try:
+            uid = str(event.get_sender_id())
+            uname = event.get_sender_name() or f"用户{uid}"
+            achs = self.store.get_achievements(uid)
+            img_path = os.path.join(self.data_dir, f"my_achievements_{uid}.png")
+            render_achievements(uname, achs, self.get_registry(), img_path)
+            yield event.image_result(img_path)
+        except Exception as e:
+            logger.error(f"[qiuye] /我的成就 异常: {e}", exc_info=True)
+            yield event.plain_result(f"成就查询出错：{e}")
 
-    @filter.command("我的道具", alias={"我的背包"})
+    @filter.command("我的道具", alias={"我的背包", "背包"})
     async def my_items(self, event: AstrMessageEvent):
-        uid = str(event.get_sender_id())
-        uname = event.get_sender_name() or f"用户{uid}"
-        inv = self.store.get_items(uid, uname)
-        img_path = os.path.join(self.data_dir, f"my_items_{uid}.png")
-        render_items(uname, inv, self.get_registry(), img_path)
-        yield event.image_result(img_path)
+        try:
+            uid = str(event.get_sender_id())
+            uname = event.get_sender_name() or f"用户{uid}"
+            inv = self.store.get_items(uid, uname)
+            img_path = os.path.join(self.data_dir, f"my_items_{uid}.png")
+            render_items(uname, inv, self.get_registry(), img_path)
+            yield event.image_result(img_path)
+        except Exception as e:
+            logger.error(f"[qiuye] /我的道具 异常: {e}", exc_info=True)
+            yield event.plain_result(f"道具查询出错：{e}")
 
     # ==================== 诗句查询（数据来自诗词底座） ====================
 
-    @filter.command("我的诗句")
+    @filter.command("我的诗句", alias={"我的诗词", "诗词积累"})
     async def my_verses(self, event: AstrMessageEvent):
-        uid = str(event.get_sender_id())
-        uname = event.get_sender_name() or f"用户{uid}"
-        base = self._get_poetry_base()
-        if base is None:
-            yield event.plain_result("诗词底座插件未安装，暂时无法查询诗句积累。")
-            return
-        verses = base.get_verses(uid)
-        if not verses:
-            yield event.plain_result(f"{uname} 还没有积累任何诗句，快去参与猜诗句/诗词对垒吧！")
-            return
-        img_path = os.path.join(self.data_dir, f"my_verses_{uid}.png")
-        render_verse_list(uname, verses, img_path)
-        yield event.plain_result(f"📚 {uname} 已积累 {len(verses)} 句诗：")
-        yield event.image_result(img_path)
+        try:
+            uid = str(event.get_sender_id())
+            uname = event.get_sender_name() or f"用户{uid}"
+            base = self._get_poetry_base()
+            if base is None:
+                yield event.plain_result("诗词底座插件未安装，暂时无法查询诗句积累。")
+                return
+            verses = base.get_verses(uid)
+            if not verses:
+                yield event.plain_result(f"{uname} 还没有积累任何诗句，快去参与猜诗句/诗词对垒吧！")
+                return
+            img_path = os.path.join(self.data_dir, f"my_verses_{uid}.png")
+            render_verse_list(uname, verses, img_path)
+            yield event.plain_result(f"📚 {uname} 已积累 {len(verses)} 句诗：")
+            yield event.image_result(img_path)
+        except Exception as e:
+            logger.error(f"[qiuye] /我的诗句 异常: {e}", exc_info=True)
+            yield event.plain_result(f"诗句查询出错：{e}")
 
-    @filter.command("诗句报表")
+    @filter.command("诗句报表", alias={"诗词报表"})
     async def verse_report(self, event: AstrMessageEvent):
-        uid = str(event.get_sender_id())
-        uname = event.get_sender_name() or f"用户{uid}"
-        base = self._get_poetry_base()
-        if base is None:
-            yield event.plain_result("诗词底座插件未安装，暂时无法生成诗句报表。")
-            return
-        report = await asyncio.to_thread(base.build_verse_report, uid, uname)
-        if not report:
-            yield event.plain_result(f"{uname} 还没有积累任何诗句，快去参与猜诗句/诗词对垒吧！")
-            return
-        img_path = os.path.join(self.data_dir, f"verse_report_{uid}.png")
-        render_poetry_report(report, img_path)
-        yield event.image_result(img_path)
+        try:
+            uid = str(event.get_sender_id())
+            uname = event.get_sender_name() or f"用户{uid}"
+            base = self._get_poetry_base()
+            if base is None:
+                yield event.plain_result("诗词底座插件未安装，暂时无法生成诗句报表。")
+                return
+            report = await asyncio.to_thread(base.build_verse_report, uid, uname)
+            if not report:
+                yield event.plain_result(f"{uname} 还没有积累任何诗句，快去参与猜诗句/诗词对垒吧！")
+                return
+            img_path = os.path.join(self.data_dir, f"verse_report_{uid}.png")
+            render_poetry_report(report, img_path)
+            yield event.image_result(img_path)
+        except Exception as e:
+            logger.error(f"[qiuye] /诗句报表 异常: {e}", exc_info=True)
+            yield event.plain_result(f"报表生成出错：{e}")
 
     async def terminate(self):
         pass
