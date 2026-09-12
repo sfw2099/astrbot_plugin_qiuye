@@ -103,49 +103,44 @@ def render_achievements(uname, achs, registry, output_path):
 # ================= 道具图 =================
 
 def render_items(uname, items, registry, output_path):
-    """渲染全插件道具汇总图。items: {item_name: count}。"""
+    """渲染全插件道具汇总图（统一平铺，不按插件分组）。items: {item_name: count}。"""
     info_map = {}
     for plugin, bucket in registry.get("items", {}).items():
         for item, info in bucket.items():
             info_map[item] = (info.get("desc", ""), plugin)
 
-    groups = {}
+    rows = []
     for item, cnt in items.items():
         if not cnt or int(cnt) <= 0:
             continue
-        desc, plugin = info_map.get(item, ("", "其他"))
-        groups.setdefault(plugin or "其他", []).append((item, int(cnt), desc))
+        desc, _plugin = info_map.get(item, ("", "其他"))
+        rows.append((item, int(cnt), desc))
+    rows.sort(key=lambda r: -r[1])
 
     pad = 30
     title_h = 70
     row_h = 52
-    head_h = 34
     title_font = _get_font(26)
     name_font = _get_font(21)
     desc_font = _get_font(15)
-    head_font = _get_font(17)
 
-    rows_total = sum(len(v) + 1 for v in groups.values())
     img_w = 760
-    img_h = pad + title_h + rows_total * (row_h + 6) + pad
+    img_h = pad + title_h + max(1, len(rows)) * (row_h + 6) + pad
 
     img = Image.new("RGB", (img_w, img_h), (250, 250, 252))
     draw = ImageDraw.Draw(img)
-    draw.text((img_w // 2, 20), f"{uname} 的道具", fill=(40, 40, 40), font=title_font, anchor="mt")
+    draw.text((img_w // 2, 20), f"{uname} 的背包", fill=(40, 40, 40), font=title_font, anchor="mt")
 
     y = pad + title_h
-    if not groups:
-        draw.text((img_w // 2, y + 20), "（还没有道具。游戏结算可获得道具，/抽道具 也可抽取）",
+    if not rows:
+        draw.text((img_w // 2, y + 20), "（还没有道具。每日签到/游戏结算/抽道具可获得）",
                   fill=(120, 120, 125), font=name_font, anchor="mm")
-    for plugin in groups:
-        draw.text((pad + 14, y + head_h // 2), f"── {plugin_display(plugin)} ──", fill=(90, 130, 200), font=head_font, anchor="lm")
-        y += head_h + 4
-        for item, cnt, desc in groups[plugin]:
-            draw.rounded_rectangle([pad, y, img_w - pad, y + row_h], radius=8, fill=(255, 255, 255),
-                                   outline=(200, 200, 205), width=1)
-            draw.text((pad + 16, y + row_h // 2), f"{item} x{cnt}", fill=(50, 120, 190), font=name_font, anchor="lm")
-            draw.text((pad + 200, y + row_h // 2), desc, fill=(110, 110, 110), font=desc_font, anchor="lm")
-            y += row_h + 6
+    for item, cnt, desc in rows:
+        draw.rounded_rectangle([pad, y, img_w - pad, y + row_h], radius=8, fill=(255, 255, 255),
+                               outline=(200, 200, 205), width=1)
+        draw.text((pad + 16, y + row_h // 2), f"{item} x{cnt}", fill=(50, 120, 190), font=name_font, anchor="lm")
+        draw.text((pad + 200, y + row_h // 2), desc, fill=(110, 110, 110), font=desc_font, anchor="lm")
+        y += row_h + 6
 
     img.save(output_path, "PNG")
     return output_path

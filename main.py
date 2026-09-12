@@ -119,6 +119,26 @@ class QiuyePlugin(HubAPI, Star):
 
     # ==================== 签到 ====================
 
+    def _checkin_drop_items(self, user_id: str, user_name: str) -> list:
+        """签到随机掉落 5 个道具（从全道具注册表随机）。返回 [(道具名, 数量)]。"""
+        import random as _r
+        reg = self.get_registry()
+        all_items = []
+        for plugin, bucket in reg.get("items", {}).items():
+            for item in bucket.keys():
+                all_items.append(item)
+        if not all_items:
+            return []
+        drops = {}
+        for _ in range(5):
+            it = _r.choice(all_items)
+            drops[it] = drops.get(it, 0) + 1
+        result = []
+        for it, cnt in drops.items():
+            self.store.add_item(user_id, it, cnt, user_name)
+            result.append((it, cnt))
+        return result
+
     @filter.command("签到", alias={"今日运势", "今日人品", "jrrp"})
     async def checkin(self, event: AstrMessageEvent):
         user_id = str(event.get_sender_id())
@@ -140,14 +160,23 @@ class QiuyePlugin(HubAPI, Star):
                 group_fd["fortune"] += bonus
                 group_fd["today_members"].append(user_id)
                 self.store.save_group_fortune()
+        # 签到掉落 5 个随机道具
+        try:
+            drops = self._checkin_drop_items(user_id, user_name)
+        except Exception as e:
+            logger.error(f"[qiuye] 签到掉落失败: {e}")
+            drops = []
+        drop_text = ""
+        if drops:
+            drop_text = "\n🎁 签到掉落：\n" + "\n".join(f"  · 【{it}】x{cnt}" for it, cnt in drops)
         try:
             ai_text = await ai_reply(self.context, user_name, rp, origin=event.unified_msg_origin)
             if ai_text:
-                yield event.plain_result(f"✨ {user_name} 签到成功！运势值：{rp}\n{ai_text}")
+                yield event.plain_result(f"✨ {user_name} 签到成功！运势值：{rp}\n{ai_text}{drop_text}")
                 return
         except Exception as e:
             logger.error(f"[qiuye] AI 调用异常: {e}")
-        yield event.plain_result(f"✨ {user_name} 签到成功！运势值：{rp}")
+        yield event.plain_result(f"✨ {user_name} 签到成功！运势值：{rp}{drop_text}")
 
     # ==================== 修改运势 (COC 骰子系统) ====================
 
@@ -502,7 +531,7 @@ class QiuyePlugin(HubAPI, Star):
         render_achievements(uname, achs, self.get_registry(), img_path)
         yield event.image_result(img_path)
 
-    @filter.command("我的道具")
+    @filter.command("我的道具", alias={"我的背包"})
     async def my_items(self, event: AstrMessageEvent):
         uid = str(event.get_sender_id())
         uname = event.get_sender_name() or f"用户{uid}"
