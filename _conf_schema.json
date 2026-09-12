@@ -1,0 +1,45 @@
+{
+    "weighted_random": {
+        "type": "bool",
+        "title": "启用运势高分加权",
+        "description": "开启后，高分段（51-99）的运势值出现概率更高",
+        "default": true
+    },
+    "max_modify_attempts": {
+        "type": "int",
+        "title": "每日修改运势次数",
+        "description": "每位用户每天可尝试修改运势的最大次数",
+        "default": 1
+    },
+    "max_records": {
+        "type": "int",
+        "title": "活跃群友记录上限",
+        "description": "跨群累计活跃用户总记录条数上限（供抽老婆等插件选取候选池）",
+        "default": 500
+    },
+    "whitelist_groups": {
+        "type": "list",
+        "description": "群聊白名单",
+        "hint": "若填写，则插件仅在这些群生效。",
+        "default": []
+    },
+    "blacklist_groups": {
+        "type": "list",
+        "description": "群聊黑名单",
+        "hint": "在此列表中的群不生效。",
+        "default": []
+    },
+    "keyword_trigger_enabled": {
+        "type": "bool",
+        "title": "启用关键词触发",
+        "description": "开启后，无需 / 前缀，发送关键词即可触发对应运势指令",
+        "default": false
+    },
+    "keyword_trigger_mode": {
+        "type": "string",
+        "title": "关键词匹配模式",
+        "description": "exact=完全匹配 / starts_with=前缀匹配 / contains=包含匹配",
+        "options": ["exact", "starts_with", "contains"],
+        "default": "contains"
+    }
+}

@@ -1,0 +1,6 @@
+name: astrbot_plugin_qiuye
+display_name: 秋烨
+desc: 秋烨枢纽 - 签到运势(COC骰子) + 用户中心(插件使用记录/成就/道具统一枢纽与渲染) + 活跃群友池
+version: v1.0.0
+author: ALin
+repo: https://github.com/sfw2099/astrbot_plugin_qiuye
