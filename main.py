@@ -68,7 +68,7 @@ class QiuyePlugin(HubAPI, Star):
             inst = getattr(meta, "star_cls", None)
             if inst is not None:
                 return inst
-        except Exception:
+        except BaseException:
             pass
         return None
 
